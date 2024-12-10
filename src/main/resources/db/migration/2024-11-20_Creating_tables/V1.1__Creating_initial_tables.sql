@@ -1,0 +1,12 @@
+CREATE TABLE category (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    allowed BOOLEAN NOT NULL
+);
+
+CREATE TABLE label (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) UNIQUE NOT NULL,
+    category_id INT,
+    FOREIGN KEY (category_id) REFERENCES category(id)
+);

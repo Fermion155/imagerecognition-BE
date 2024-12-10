@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+.env
+db-root-password.txt
+db-password.txt
+*.txt
+aws_access_key.txt
+aws_secret_key.txt

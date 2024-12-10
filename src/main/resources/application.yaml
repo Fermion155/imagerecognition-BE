@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: imagerecognition-BE
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    flyway:
+      enabled: true
+      validate-on-migrate: true
+      default-schema: labels_db
+      locations: classpath:resources/db/migration
+
+---
+spring:
+  config:
+    activate:
+      on-profile: local
+  datasource:
+    url: jdbc:mysql://localhost:3307/labels_db
+    username: labels_user
+    password: labels_password
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+  datasource:
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}

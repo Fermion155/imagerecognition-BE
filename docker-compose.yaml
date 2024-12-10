@@ -1,0 +1,52 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        - AWS_REGION=${AWS_REGION}
+    container_name: app
+    ports:
+      - 8080:8080
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://labelDb:3306/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_password
+      - aws_access_key
+      - aws_secret_key
+    depends_on:
+      db:
+        condition: service_healthy
+  db:
+    image: mysql:9.0.1
+    container_name: labelDb
+    ports:
+      - 3307:3306
+    restart: always
+    volumes:
+      - myvolume:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD_FILE: /run/secrets/db_password
+    env_file: .env
+    healthcheck:
+      test: ["CMD", "mysqladmin", "-u root", "-p $(cat /run/secrets/db_root_password)",  "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    secrets:
+      - db_password
+      - db_root_password
+secrets:
+  db_password:
+    file: db_password.txt
+  db_root_password:
+    file: db_root_password.txt
+  aws_access_key:
+    file: aws_access_key.txt
+  aws_secret_key:
+    file: aws_secret_key.txt
+volumes:
+  myvolume:
