@@ -93,6 +93,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           script: |
             docker stop ${{ secrets.CONTAINER_NAME }}
+            docker rm ${{ secrets.CONTAINER_NAME }}
             docker pull ${{ secrets.DOCKER_USER }}/${{ secrets.APP_NAME }}
             docker run -dp ${{ secrets.CLOUD_PORT }}:8080 --name ${{ secrets.CONTAINER_NAME }} \
               -e SPRING_DATASOURCE_USERNAME=${{ secrets.DB_USERNAME }} \
