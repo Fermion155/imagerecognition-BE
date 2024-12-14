@@ -29,7 +29,6 @@ services:
       MYSQL_DATABASE: ${DB_NAME}
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
-    env_file: .env
     healthcheck:
       test: ["CMD", "mysqladmin", "-u root", "-p $(cat /run/secrets/db_root_password)",  "ping", "-h", "localhost"]
       timeout: 20s
