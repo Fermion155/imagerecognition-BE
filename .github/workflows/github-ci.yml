@@ -22,6 +22,14 @@ jobs:
   test_docker_compose:
     needs: [build_maven]
     runs-on: ubuntu-latest
+    env:
+      DB_NAME: ${{ secrets.CONTAINER_DB_NAME }}
+      DB_USER: ${{ secrets.CONTAINER_DB_USER }}
+      DB_PASSWORD: ${{ secrets.CONTAINER_DB_PASSWORD }}
+      DB_ROOT_PASSWORD: ${{ secrets.CONTAINER_DB_ROOT_PASSWORD }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+      AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Install docker compose
@@ -30,21 +38,13 @@ jobs:
           sudo apt-get install docker-compose -y
       - run: |
           docker compose up -d
-        env:
-          DB_NAME: ${{ secrets.CONTAINER_DB_NAME }}
-          DB_USER: ${{ secrets.CONTAINER_DB_USER }}
-          DB_PASSWORD: ${{ secrets.CONTAINER_DB_PASSWORD }}
-          DB_ROOT_PASSWORD: ${{ secrets.CONTAINER_DB_ROOT_PASSWORD }}
-          AWS_REGION: ${{ secrets.AWS_REGION }}
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
       - name: Check if db container is running
         run: |
-          if [ $(docker ps -qf name="db") ]
+          if [ $(docker ps -qf name="labelDb") ]
           then
-            echo "Db container is running"
+            echo "Database container is running"
           else
-            echo "Db container is not running"
+            echo "Database container is not running"
             exit 1
           fi
       - name: Check if app container is running
