@@ -76,31 +76,11 @@ jobs:
     steps:
       - name: executing remote ssh commands
         uses: appleboy/ssh-action@v1.2.0
-        env:
-          CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
-          DOCKER_USER: ${{ secrets.DOCKER_USER }}
-          APP_NAME: ${{ secrets.APP_NAME }}
-          CLOUD_PORT: ${{ secrets.CLOUD_PORT }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_URL: ${{ secrets.DB_URL }}
-          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
         with:
           host: ${{ secrets.CLOUD_HOST }}
           username: ${{ secrets.CLOUD_USER }}
           key: ${{ secrets.CLOUD_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          envs: |
-            CONTAINER_NAME
-            DOCKER_USER
-            APP_NAME
-            CLOUD_PORT
-            DB_USERNAME
-            DB_PASSWORD
-            DB_URL
-            AWS_ACCESS_KEY
-            AWS_SECRET_KEY
           script: |
             docker stop $CONTAINER_NAME
             docker pull $DOCKER_USER/$APP_NAME
@@ -111,5 +91,15 @@ jobs:
               -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY \
               -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_KEY \
               $DOCKER_USER/$APP_NAME
+        env:
+          CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          APP_NAME: ${{ secrets.APP_NAME }}
+          CLOUD_PORT: ${{ secrets.CLOUD_PORT }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_URL: ${{ secrets.DB_URL }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
 
 
