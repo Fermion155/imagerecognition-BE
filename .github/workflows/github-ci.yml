@@ -1,0 +1,119 @@
+name: Image Recognition Backend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build_maven:
+    runs-on: ubuntu-22.04.5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: maven
+      - name: Build with Maven
+        run: mvn clean install
+  test_docker_compose:
+    needs: [build_maven]
+    runs-on: ubuntu-22.04.5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install docker compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker-compose -y
+      - run: |
+          docker compose up -d
+        env:
+          DB_NAME: ${{ secrets.CONTAINER_DB_NAME }}
+          DB_USER: ${{ secrets.CONTAINER_DB_USER }}
+          DB_PASSWORD: ${{ secrets.CONTAINER_DB_PASSWORD }}
+          DB_ROOT_PASSWORD: ${{ secrets.CONTAINER_DB_ROOT_PASSWORD }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+      - name: Check if db container is running
+        run: |
+          if [ $(docker ps -qf name="db") ]
+          then
+            echo "Db container is running"
+          else
+            echo "Db container is not running"
+            exit 1
+          fi
+      - name: Check if app container is running
+        run: |
+          if [ $(docker ps -qf name="app") ]
+          then
+            echo "App container is running"
+          else
+            echo "App container is not running"
+            exit 1
+          fi
+      - name: Stop containers
+        if: always()
+        run: docker-compose down
+  build_docker_image:
+    needs: [test_docker_compose]
+    runs-on: ubuntu-22.04.5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install docker
+        run: |
+          sudo apt-get update
+          sudo apt-get install docker -y
+      - name: build and push docker image
+        run: |
+          echo {{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
+          docker build --build-arg AWS_REGION=${{ secrets.AWS_REGION }} \
+            -t ${{ secrets.DOCKER_USER }}/${{ secrets.APP_NAME }} .
+          docker push ${{ secrets.DOCKER_USER }}/${{ secrets.APP_NAME }}
+  deploy:
+    needs: [build_docker_image]
+    runs-on: ubuntu-22.04.5
+    steps:
+      - name: executing remote ssh commands
+        uses: appleboy/ssh-action@v1.2.0
+        env:
+          CONTAINER_NAME: ${{ secrets.CONTAINER_NAME }}
+          DOCKER_USER: ${{ secrets.DOCKER_USER }}
+          APP_NAME: ${{ secrets.APP_NAME }}
+          CLOUD_PORT: ${{ secrets.CLOUD_PORT }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_URL: ${{ secrets.DB_URL }}
+          AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
+          AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_KEY }}
+        with:
+          host: ${{ secrets.CLOUD_HOST }}
+          username: ${{ secrets.CLOUD_USER }}
+          key: ${{ secrets.CLOUD_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          envs: |
+            CONTAINER_NAME
+            DOCKER_USER
+            APP_NAME
+            CLOUD_PORT
+            DB_USERNAME
+            DB_PASSWORD
+            DB_URL
+            AWS_ACCESS_KEY
+            AWS_SECRET_KEY
+          script: |
+            docker stop $CONTAINER_NAME
+            docker pull $DOCKER_USER/$APP_NAME
+            docker run -dp $CLOUD_PORT:8080 --name $CONTAINER_NAME \
+              -e SPRING_DATASOURCE_USERNAME=$DB_USERNAME \
+              -e SPRING_DATASOURCE_PASSWORD=$DB_PASSWORD \
+              -e SPRING_DATASOURCE_URL=$DB_URL \
+              -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY \
+              -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_KEY \
+              $DOCKER_USER/$APP_NAME
+
+
