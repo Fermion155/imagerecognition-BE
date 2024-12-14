@@ -64,10 +64,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install docker -y
       - name: build and push docker image
         run: |
           echo {{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USER }} --password-stdin
