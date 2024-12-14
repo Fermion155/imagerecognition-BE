@@ -30,7 +30,7 @@ services:
       MYSQL_USER: ${DB_USER}
       MYSQL_PASSWORD: ${DB_PASSWORD}
     healthcheck:
-      test: ["CMD", "sh", "-c", "mysqladmin -u root -p ${DB_ROOT_PASSWORD} ping -h localhost"]
+      test: ["CMD", "sh", "-c", "mysqladmin -u root -p${DB_ROOT_PASSWORD} ping -h localhost"]
       timeout: 20s
       retries: 10
 volumes:
